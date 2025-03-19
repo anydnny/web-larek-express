@@ -21,6 +21,7 @@ const errorHandler = (
     }
     return res.status(400).send({ message: 'Неизвестная ошибка валидации' });
   }
+
   return res.status(statusCode).json({
     message: statusCode === 500 ? 'Произошла неизвестная ошибка' : message,
   });

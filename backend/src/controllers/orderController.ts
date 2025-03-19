@@ -13,38 +13,39 @@ const createOrder = async (
   const genId = faker.string.uuid();
 
   try {
-    if (!items || items.length === 0) {
-      next(new BadRequestError('Список пуст'));
-      return;
-    }
-
     const products = await product.find({ _id: { $in: items } });
 
     if (products.length !== items.length) {
-      next(new BadRequestError('Один или несколько товаров не найдены'));
-      return;
+      return next(new BadRequestError('Один или несколько товаров не найдены'));
     }
 
-    products.forEach((item) => {
+    const hasInvalidProduct = products.some((item) => {
       if (!item.price) {
         next(new BadRequestError(`Товар ${item.title} не продаётся`));
+        return true;
       }
+      return false;
     });
+
+    if (hasInvalidProduct) {
+      return false;
+    }
+
     const totalSum = products.reduce(
       (totalPrice, item) => totalPrice + (item.price || 0),
       0,
     );
 
     if (totalSum !== total) {
-      next(new BadRequestError('Сумма заказа не совпадает'));
-      return;
+      return next(new BadRequestError('Сумма заказа не совпадает'));
     }
-    res.status(201).send({ id: genId, total: totalSum });
+
+    return res.status(201).send({ id: genId, total: totalSum });
   } catch (error) {
     if (error instanceof Error && error.name === 'ValidationError') {
-      next(new BadRequestError('Ошибка валидации'));
+      return next(new BadRequestError('Ошибка валидации'));
     }
-    next(error);
+    return next(error);
   }
 };
 export default createOrder;

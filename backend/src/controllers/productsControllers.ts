@@ -11,9 +11,9 @@ export const getProducts = async (
 ) => {
   try {
     const products = await product.find({});
-    res.status(200).send({ products, total: products.length });
+    return res.status(200).send({ products, total: products.length });
   } catch (error) {
-    next(new BaseError('Произзошла ошибка'));
+    return next(new BaseError('Произошла ошибка'));
   }
 };
 
@@ -35,16 +35,16 @@ export const createProduct = async (
       price,
     });
 
-    res.status(201).send({ product: newProduct });
+    return res.status(201).send({ product: newProduct });
   } catch (error) {
-    if (error instanceof Error) {
-      if (error.name === 'ValidationError') {
-        next(new BadRequestError('Ошибка валидации'));
-      } else if (error.message.includes('E11000')) {
-        next(new DuplicateTitleError('Товар с таким title уже существует'));
-      }
+    if (error instanceof Error && error.name === 'ValidationError') {
+      return next(new BadRequestError('Ошибка валидации'));
+    } if (error instanceof Error && error.message.includes('E11000')) {
+      return next(
+        new DuplicateTitleError('Товар с таким title уже существует'),
+      );
     }
 
-    next(error);
+    return next(error);
   }
 };
