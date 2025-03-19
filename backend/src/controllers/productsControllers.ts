@@ -27,16 +27,6 @@ export const createProduct = async (
       description, image, title, category, price,
     } = _req.body;
 
-    if (!title || !image || !category) {
-      next(new BadRequestError('Поля image, title, category обязательные'));
-    }
-
-    const checkProduct = await product.findOne({ title });
-
-    if (checkProduct) {
-      next(new DuplicateTitleError('Товар с таким title уже существует'));
-    }
-
     const newProduct = await product.create({
       description,
       image,
@@ -47,6 +37,14 @@ export const createProduct = async (
 
     res.status(201).send({ product: newProduct });
   } catch (error) {
+    if (error instanceof Error) {
+      if (error.name === 'ValidationError') {
+        next(new BadRequestError('Ошибка валидации'));
+      } else if (error.message.includes('E11000')) {
+        next(new DuplicateTitleError('Товар с таким title уже существует'));
+      }
+    }
+
     next(error);
   }
 };

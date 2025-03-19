@@ -41,6 +41,9 @@ const createOrder = async (
     }
     res.status(201).send({ id: genId, total: totalSum });
   } catch (error) {
+    if (error instanceof Error && error.name === 'ValidationError') {
+      next(new BadRequestError('Ошибка валидации'));
+    }
     next(error);
   }
 };
